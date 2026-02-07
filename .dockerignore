@@ -1,0 +1,9 @@
+.claude
+cloud-credentials
+.env
+.gitignore
+.stignore
+CLAUDE.md
+LICENSE
+okteto.yaml
+README.md

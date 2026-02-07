@@ -8,7 +8,7 @@ deploy:
         SA_EMAIL=$OKTETO_NAMESPACE-treasure-hunt-app@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
 
         # Create the Service Account if it doesn't already exist
-        gcloud iam service-accounts create $SA_NAME --project=$GOOGLE_CLOUD_PROJECT --quiet 2>/dev/null || true
+        gcloud iam service-accounts create $SA_NAME --project=$GOOGLE_CLOUD_PROJECT --display-name="$OKTETO_NAMESPACE Treasure Hunt App" --description="GCS access for the Cloud Treasure Chest app in the $OKTETO_NAMESPACE namespace" --quiet 2>/dev/null || true
 
         # Wait for the service account to propagate across GCP services
         sleep 10
