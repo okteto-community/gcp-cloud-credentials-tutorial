@@ -1,0 +1,64 @@
+deploy:
+  image: gcr.io/google.com/cloudsdktool/google-cloud-cli:stable
+  commands:
+    - name: create service account and bind permissions
+      command: |
+        set -e
+        SA_NAME=$OKTETO_NAMESPACE-treasure-hunt-app
+        SA_EMAIL=$OKTETO_NAMESPACE-treasure-hunt-app@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
+
+        # Create the Service Account if it doesn't already exist
+        gcloud iam service-accounts create $SA_NAME --project=$GOOGLE_CLOUD_PROJECT --quiet 2>/dev/null || true
+
+        # Wait for the service account to propagate across GCP services
+        sleep 10
+
+        # Give the account permissions to administer objects in GCS
+        gcloud projects add-iam-policy-binding $GOOGLE_CLOUD_PROJECT --member="serviceAccount:$SA_EMAIL" --role="roles/storage.objectAdmin" --quiet --no-user-output-enabled
+
+        # Bind the Service Account to the default Okteto Service Account in the cluster, so that it can be used by the application to access GCS
+        gcloud iam service-accounts add-iam-policy-binding --role roles/iam.workloadIdentityUser --member "serviceAccount:$GKE_PROJECT.svc.id.goog[$OKTETO_NAMESPACE/default]" $SA_EMAIL --project $GOOGLE_CLOUD_PROJECT --quiet --no-user-output-enabled
+
+        # Annotate the default Service Account to tell the GKE metadata server which GCP service account to impersonate when pods running under that Kubernetes SA request credentials.
+        kubectl annotate serviceaccount default --namespace $OKTETO_NAMESPACE iam.gke.io/gcp-service-account=$SA_EMAIL --overwrite
+
+
+    - name: create bucket
+      command: |
+        set -e
+        # create bucket if it does not exist
+        if ! gcloud storage buckets list --project "$GOOGLE_CLOUD_PROJECT" | grep -q "$GCS_BUCKET"; then
+          echo "Creating bucket gs://$GCS_BUCKET"
+          gcloud storage buckets create gs://"$GCS_BUCKET" --project "$GOOGLE_CLOUD_PROJECT" --uniform-bucket-level-access
+        else
+          echo "Bucket gs://$GCS_BUCKET already exists"
+        fi
+        echo "GCS_BUCKET=$GCS_BUCKET" >> "$OKTETO_ENV"
+
+
+    - name: deploy application
+      command: okteto deploy -f docker-compose.yml --var GCS_BUCKET="$GCS_BUCKET"
+
+
+test:
+  gcp:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:stable
+    commands:
+      - gcloud storage ls --project $GOOGLE_CLOUD_PROJECT | grep $GCS_BUCKET
+
+destroy:
+  image: gcr.io/google.com/cloudsdktool/google-cloud-cli:stable
+  commands:
+    - name: delete cloud resources
+      command: |
+        SA_EMAIL=$OKTETO_NAMESPACE-treasure-hunt-app@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
+        gcloud iam service-accounts delete $SA_EMAIL --project $GOOGLE_CLOUD_PROJECT --quiet || echo "Warning: could not delete service account $SA_EMAIL (may require manual cleanup)"
+        gcloud storage rm -r gs://$GCS_BUCKET --project $GOOGLE_CLOUD_PROJECT --quiet || echo "Warning: could not delete bucket gs://$GCS_BUCKET (may require manual cleanup)"
+
+
+
+dev:
+  web:
+    command: bash
+    sync:
+      - .:/app

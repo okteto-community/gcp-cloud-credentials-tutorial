@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Cloud Treasure Chest</title>
+    <style>
+      body{font-family:system-ui,Arial;margin:2rem;background:#f6f9fb}
+      .card{background:white;padding:1.5rem;border-radius:8px;max-width:720px;margin:auto;box-shadow:0 6px 20px rgba(20,30,60,.08)}
+      textarea{width:100%;height:120px;padding:.5rem;font-size:1rem}
+      button{background:#0b79d0;color:white;border:none;padding:.6rem 1rem;border-radius:6px;font-weight:600}
+      .success{margin-top:1rem;padding:.8rem;background:#e8f8ef;border-radius:6px;color:#076b3d}
+      .error{margin-top:1rem;padding:.8rem;background:#fdecea;border-radius:6px;color:#7a1e14}
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Cloud Treasure Chest</h1>
+      <p>Write something fun and lock it in the bucket forever (or until you delete it).</p>
+
+      <form method="post">
+        <label for="text">Your message</label>
+        <textarea id="text" name="text" placeholder="Type your secret message...">Hello from the Cloud Treasure Chest! 🌟</textarea>
+        <div style="margin-top:.75rem">
+          <button type="submit">Send to bucket</button>
+        </div>
+      </form>
+
+      {% if uploaded %}
+        {% if url %}
+          <div class="success">
+            Saved as <strong>{{ name }}</strong> — <a href="{{ url }}" target="_blank">Open in Storage</a>
+          </div>
+        {% else %}
+          <div class="error">Upload failed: {{ error }}</div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </body>
+</html>
