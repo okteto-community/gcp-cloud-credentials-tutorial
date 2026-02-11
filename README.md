@@ -24,14 +24,12 @@ Before deploying, configure the following variables in your Okteto instance. Go 
 ```bash
 GOOGLE_CLOUD_PROJECT=<your-gcp-project-id>
 GKE_PROJECT=<your-gke-cluster-project-id>
-GCS_BUCKET=<your-bucket-name>
 ```
 
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `GOOGLE_CLOUD_PROJECT` | GCP project where resources (service accounts, buckets) are created | `my-resources-project` |
 | `GKE_PROJECT` | GCP project where the GKE cluster runs (may differ from above) | `my-cluster-project` |
-| `GCS_BUCKET` | Name of the GCS bucket to create/use | `my-demo-bucket` |
 
 These variables are used by the `deploy`, `test`, and `destroy` phases in `okteto.yaml`.
 
