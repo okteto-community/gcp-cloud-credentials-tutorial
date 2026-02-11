@@ -4,8 +4,8 @@ deploy:
     - name: create service account and bind permissions
       command: |
         set -e
-        SA_NAME=$OKTETO_NAMESPACE-treasure-hunt-app
-        SA_EMAIL=$OKTETO_NAMESPACE-treasure-hunt-app@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
+        SA_NAME=${OKTETO_NAMESPACE}-treasure
+        SA_EMAIL=${SA_NAME}@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
 
         # Create the Service Account if it doesn't already exist
         gcloud iam service-accounts create $SA_NAME --project=$GOOGLE_CLOUD_PROJECT --display-name="$OKTETO_NAMESPACE Treasure Hunt App" --description="GCS access for the Cloud Treasure Chest app in the $OKTETO_NAMESPACE namespace" --quiet 2>/dev/null || true
@@ -26,6 +26,7 @@ deploy:
     - name: create bucket
       command: |
         set -e
+        GCS_BUCKET=${OKTETO_NAMESPACE}-treasure
         # create bucket if it does not exist
         if ! gcloud storage buckets list --project "$GOOGLE_CLOUD_PROJECT" | grep -q "$GCS_BUCKET"; then
           echo "Creating bucket gs://$GCS_BUCKET"
@@ -44,16 +45,17 @@ test:
   gcp:
     image: gcr.io/google.com/cloudsdktool/google-cloud-cli:stable
     commands:
-      - gcloud storage ls --project $GOOGLE_CLOUD_PROJECT | grep $GCS_BUCKET
+      - gcloud storage ls --project $GOOGLE_CLOUD_PROJECT | grep ${OKTETO_NAMESPACE}-treasure
 
 destroy:
   image: gcr.io/google.com/cloudsdktool/google-cloud-cli:stable
   commands:
     - name: delete cloud resources
       command: |
-        SA_EMAIL=$OKTETO_NAMESPACE-treasure-hunt-app@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
+        RESOURCE_NAME=${OKTETO_NAMESPACE}-treasure
+        SA_EMAIL=${RESOURCE_NAME}@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
         gcloud iam service-accounts delete $SA_EMAIL --project $GOOGLE_CLOUD_PROJECT --quiet || echo "Warning: could not delete service account $SA_EMAIL (may require manual cleanup)"
-        gcloud storage rm -r gs://$GCS_BUCKET --project $GOOGLE_CLOUD_PROJECT --quiet || echo "Warning: could not delete bucket gs://$GCS_BUCKET (may require manual cleanup)"
+        gcloud storage rm -r gs://$RESOURCE_NAME --project $GOOGLE_CLOUD_PROJECT --quiet || echo "Warning: could not delete bucket gs://$RESOURCE_NAME (may require manual cleanup)"
 
 
 

@@ -13,7 +13,7 @@ def upload_string(name: str, content: str) -> str:
     bucket = client.bucket(BUCKET)
     blob = bucket.blob(name)
     blob.upload_from_string(content)
-    return f"https://storage.googleapis.com/{BUCKET}/{name}"
+    return f"https://console.cloud.google.com/storage/browser/_details/{BUCKET}/{name}"
 
 
 @app.route('/', methods=['GET', 'POST'])
